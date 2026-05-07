@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SEVIX – Norsk Streaming-søk</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #0d0914 0%, #0a0510 50%, #0d0712 100%);
+      min-height: 100vh; color: #fff;
+    }
+    header {
+      background: linear-gradient(180deg, #1a0a2e 0%, #0d0914 100%);
+      padding: 32px 20px 28px; text-align: center;
+      border-bottom: 0.5px solid rgba(255,255,255,0.08);
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ""; position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+      width: 300px; height: 120px;
+      background: radial-gradient(ellipse, rgba(139,92,246,0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .tagline { font-size: 11px; letter-spacing: 6px; color: rgba(255,255,255,0.25); margin-bottom: 8px; text-transform: uppercase; }
+    h1 {
+      font-size: 42px; font-weight: 700; letter-spacing: 4px;
+      background: linear-gradient(135deg, #fff 30%, #a78bfa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.4); }
+
+    main { max-width: 560px; margin: 0 auto; padding: 24px 16px; }
+
+    .search-box {
+      display: flex; gap: 10px; margin-bottom: 24px;
+      background: rgba(255,255,255,0.05);
+      border: 0.5px solid rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 6px 6px 6px 14px;
+    }
+    .search-box input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 15px; padding: 4px 0; caret-color: #a78bfa;
+    }
+    .search-box input::placeholder { color: rgba(255,255,255,0.3); }
+    .search-box button {
+      background: rgba(139,92,246,0.85); color: #fff; border: none;
+      border-radius: 8px; padding: 8px 18px; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    }
+    .search-box button:disabled { background: rgba(139,92,246,0.3); cursor: default; }
+
+    /* Ad */
+    .ad-banner {
+      display: block; text-decoration: none; margin-bottom: 20px;
+      border-radius: 12px; padding: 14px 16px; position: relative;
+      transition: filter 0.15s;
+    }
+    .ad-banner:hover { filter: brightness(1.1); }
+    .ad-label {
+      position: absolute; top: 8px; right: 10px;
+      font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.5px;
+    }
+    .ad-inner { display: flex; align-items: center; gap: 12px; }
+    .ad-logo {
+      width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;
+    }
+    .ad-title { font-weight: 500; font-size: 14px; color: #fff; margin-bottom: 2px; }
+    .ad-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+    .ad-cta {
+      display: inline-block; margin-top: 12px;
+      color: #fff; font-size: 12px; font-weight: 500;
+      padding: 6px 14px; border-radius: 8px;
+    }
+
+    /* Results */
+    .result-card {
+      background: linear-gradient(135deg, #1a1025 0%, #0f0a1a 100%);
+      border: 0.5px solid rgba(255,255,255,0.15);
+      border-radius: 16px; overflow: hidden; margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .card-top { display: flex; }
+    .poster-wrap { flex-shrink: 0; width: 90px; position: relative; }
+    .poster-wrap img { width: 90px; height: 135px; object-fit: cover; display: block; }
+    .poster-wrap::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to right, transparent 60%, #1a1025);
+    }
+    .card-info { flex: 1; padding: 14px 16px 10px; }
+    .card-title { font-weight: 500; font-size: 18px; color: #fff; line-height: 1.2; margin-bottom: 4px; }
+    .card-original { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
+    .card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .badge {
+      font-size: 11px; padding: 2px 9px; border-radius: 99px;
+    }
+    .badge-film { background: rgba(229,9,20,0.25); color: #f87171; border: 0.5px solid rgba(229,9,20,0.4); }
+    .badge-show { background: rgba(0,100,255,0.25); color: #60a5fa; border: 0.5px solid rgba(0,100,255,0.4); }
+    .meta-item { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .imdb { font-size: 12px; color: #ddd; }
+    .genres { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+    .card-services { padding: 10px 14px 14px; border-top: 0.5px solid rgba(255,255,255,0.08); }
+    .service-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      border: 0.5px solid rgba(255,255,255,0.12);
+      margin-bottom: 8px; text-decoration: none;
+      transition: background 0.15s;
+    }
+    .service-row:hover { background: rgba(255,255,255,0.12); }
+    .service-logo {
+      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;
+    }
+    .service-name { font-weight: 500; font-size: 14px; color: #fff; }
+    .service-type { font-size: 12px; margin-top: 1px; }
+    .type-free { color: #4ade80; }
+    .type-paid { color: #f59e0b; }
+    .service-arrow { font-size: 11px; color: rgba(255,255,255,0.4); margin-left: auto; }
+    .no-service { font-size: 13px; color: rgba(255,255,255,0.35); padding: 8px 4px; }
+
+    .loading, .empty, .error { text-align: center; padding: 32px 0; font-size: 14px; color: rgba(255,255,255,0.4); }
+    .error { color: #f87171; }
+    .footer-note { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="tagline">streaming guide</div>
+    <h1>SEVIX</h1>
+    <p class="subtitle">Finn hvilke norske tjenester som har filmen eller serien din</p>
+  </header>
+
+  <main>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Søk etter film eller serie..." autocomplete="off"/>
+      <button id="searchBtn" onclick="doSearch()">Søk</button>
+    </div>
+
+    <div id="adContainer"></div>
+    <div id="results"></div>
+  </main>
+
+  <script>
+    const SERVICES = {
+      netflix:    { name:"Netflix",      color:"#E50914", url:"https://www.netflix.com/no/search?q=" },
+      hbo:        { name:"Max",          color:"#0010FF", url:"https://www.max.com/no/search?q=" },
+      disney:     { name:"Disney+",      color:"#113CCF", url:"https://www.disneyplus.com/search/" },
+      apple:      { name:"Apple TV+",    color:"#555555", url:"https://tv.apple.com/no/search?term=" },
+      viaplay:    { name:"Viaplay",      color:"#6B21A8", url:"https://viaplay.com/no/search?q=" },
+      tv2:        { name:"TV 2 Play",    color:"#E4000F", url:"https://play.tv2.no/search?q=" },
+      nrk:        { name:"NRK TV",       color:"#003A70", url:"https://tv.nrk.no/search#query=" },
+      prime:      { name:"Prime Video",  color:"#00A8E0", url:"https://www.primevideo.com/search/ref=atv_nb_sr?phrase=" },
+      paramount:  { name:"Paramount+",   color:"#0064FF", url:"https://www.paramountplus.com/no/search/" },
+      skyshowtime:{ name:"SkyShowtime",  color:"#FF6B00", url:"https://www.skyshowtime.com/search?q=" },
+    };
+
+    const ADS = [
+      { service:"netflix",  headline:"Ikke Netflix ennå?", sub:"Strøm tusenvis av filmer og serier.", cta:"Start gratis prøveperiode →", url:"https://www.netflix.com/no/signup" },
+      { service:"viaplay",  headline:"Se sport & serier på Viaplay", sub:"Premier League, F1 og eksklusive serier.", cta:"Prøv Viaplay gratis →", url:"https://viaplay.com/no/" },
+      { service:"disney",   headline:"Disney+, Marvel, Star Wars & mer", sub:"Ubegrenset underholdning for hele familien.", cta:"Abonner på Disney+ →", url:"https://www.disneyplus.com/no-no" },
+      { service:"tv2",      headline:"TV 2 Play – norsk underholdning", sub:"Nyheter, sport og norske serier.", cta:"Kom i gang med TV 2 Play →", url:"https://play.tv2.no/" },
+      { service:"prime",    headline:"Prime Video er inkludert i Prime", sub:"Filmer, serier og rask levering.", cta:"Prøv Amazon Prime →", url:"https://www.primevideo.com/" },
+    ];
+
+    function initials(name) { return name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
+
+    function renderAd(ad) {
+      const svc = SERVICES[ad.service];
+      return `<a class="ad-banner" href="${ad.url}" target="_blank" rel="noopener noreferrer sponsored"
+        style="background:linear-gradient(135deg,${svc.color}18 0%,rgba(255,255,255,0.03) 100%);border-left:3px solid ${svc.color};border:0.5px solid ${svc.color}44;border-left:3px solid ${svc.color};">
+        <span class="ad-label">ANNONSE</span>
+        <div class="ad-inner">
+          <div class="ad-logo" style="background:${svc.color}">${initials(svc.name)}</div>
+          <div>
+            <div class="ad-title">${ad.headline}</div>
+            <div class="ad-sub">${ad.sub}</div>
+          </div>
+        </div>
+        <span class="ad-cta" style="background:${svc.color}">${ad.cta}</span>
+      </a>`;
+    }
+
+    function renderResults(results) {
+      const typeLabels = { flatrate:"Inkludert i abonnement", free:"Gratis", ads:"Gratis med reklame", rent:"Leie", buy:"Kjøp" };
+      const freeTypes = ["flatrate","free","ads"];
+      return results.map(r => {
+        const isShow = r.type === "show";
+        const services = (r.services||[]).map(s => {
+          const svc = SERVICES[s.key]; if (!svc) return "";
+          const isFree = freeTypes.includes(s.type);
+          const label = typeLabels[s.type] || s.type;
+          const price = s.price ? ` — ${s.price}` : "";
+          const link = svc.url + encodeURIComponent(r.title);
+          return `<a class="service-row" href="${link}" target="_blank" rel="noopener noreferrer">
+            <div class="service-logo" style="background:${svc.color}">${initials(svc.name)}</div>
+            <div>
+              <div class="service-name">${svc.name}</div>
+              <div class="service-type ${isFree?"type-free":"type-paid"}">${label}${price}</div>
+            </div>
+            <span class="service-arrow">Åpne →</span>
+          </a>`;
+        }).join("");
+
+        const poster = r.poster ? `<div class="poster-wrap"><img src="${r.poster}" alt="${r.title}"/></div>` : "";
+        const orig = r.originalTitle && r.originalTitle !== r.title ? `<div class="card-original">${r.originalTitle}</div>` : "";
+        const imdb = r.imdb ? `<span class="imdb">★ ${r.imdb}</span>` : "";
+        const runtime = r.runtime ? `<span class="meta-item">${r.runtime}</span>` : "";
+        const year = r.year ? `<span class="meta-item">${r.year}</span>` : "";
+
+        return `<div class="result-card">
+          <div class="card-top">
+            ${poster}
+            <div class="card-info">
+              <div class="card-title">${r.title}</div>
+              ${orig}
+              <div class="card-meta">
+                <span class="badge ${isShow?"badge-show":"badge-film"}">${isShow?"Serie":"Film"}</span>
+                ${year}${imdb}${runtime}
+              </div>
+              ${r.genres ? `<div class="genres">${r.genres}</div>` : ""}
+            </div>
+          </div>
+          <div class="card-services">
+            ${services || '<div class="no-service">Ikke tilgjengelig på norske streamingtjenester for øyeblikket.</div>'}
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    async function doSearch() {
+      const query = document.getElementById("searchInput").value.trim();
+      if (!query) return;
+      const btn = document.getElementById("searchBtn");
+      const resDiv = document.getElementById("results");
+      const adDiv = document.getElementById("adContainer");
+      btn.disabled = true; btn.textContent = "Søker...";
+      resDiv.innerHTML = '<div class="loading">Henter strømmeinformasjon...</div>';
+
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+
+        const foundKeys = data.flatMap(r => (r.services||[]).map(s=>s.key));
+        const ad = ADS.find(a => !foundKeys.includes(a.service)) || ADS[Math.floor(Math.random()*ADS.length)];
+        adDiv.innerHTML = renderAd(ad);
+
+        resDiv.innerHTML = data.length === 0
+          ? `<div class="empty">Ingen resultater funnet for «${query}»</div>`
+          : renderResults(data) + '<p class="footer-note">Info basert på AI-kunnskap · Sjekk tjenesten for oppdatert tilgjengelighet · Noen lenker er affiliatelenker</p>';
+      } catch(e) {
+        resDiv.innerHTML = '<div class="error">Noe gikk galt. Prøv igjen.</div>';
+      }
+
+      btn.disabled = false; btn.textContent = "Søk";
+    }
+
+    document.getElementById("searchInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") doSearch();
+    });
+
+    // Show random ad on load
+    const adDiv = document.getElementById("adContainer");
+    adDiv.innerHTML = renderAd(ADS[Math.floor(Math.random()*ADS.length)]);
+  </script>
+</body>
+</html>
