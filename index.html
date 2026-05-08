@@ -170,6 +170,14 @@
       document.getElementById('wl-badge').textContent = n > 0 ? `(${n})` : '';
     }
 
+    function handleWlClick(safeTitle, btn) {
+      const title = decodeURIComponent(safeTitle);
+      const r = resultCache[title];
+      if (!r) return;
+      const item = { title: r.title, type: r.type, year: r.year, genres: r.genres, poster: r.poster };
+      toggleWatchlist(item, btn);
+    }
+
     function toggleWatchlist(item, btn) {
       if (isInWatchlist(item.title)) {
         removeFromWatchlist(item.title);
@@ -228,6 +236,7 @@
     // --- Filters ---
     let activeType = 'all', activeGenre = 'all';
     let lastResults = [];
+    let resultCache = {};
 
     const GENRES = ['Action','Drama','Komedie','Thriller','Sci-Fi','Horror','Romantikk','Animasjon','Dokumentar','Familie'];
 
@@ -339,6 +348,8 @@
         const data = await res.json();
         // adDiv.innerHTML = renderAd(...); // aktiveres med affiliate-lenker
         lastResults = data;
+        resultCache = {};
+        data.forEach(r => { resultCache[r.title] = r; });
         activeType = 'all'; activeGenre = 'all';
         renderFilters(data);
         resDiv.innerHTML = data.length === 0
