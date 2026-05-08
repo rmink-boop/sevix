@@ -39,6 +39,14 @@
     .ad-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
     .ad-cta { display: inline-block; margin-top: 12px; color: #fff; font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 8px; }
 
+    /* Filters */
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
+    .filter-divider { width: 0.5px; background: rgba(255,255,255,0.1); margin: 0 4px; }
+    .f-btn { background: transparent; border: 0.5px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); border-radius: 99px; font-size: 12px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .f-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
+    .f-btn.active { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.6); color: #c4b5fd; }
+
     /* Result card */
     .result-card { background: linear-gradient(135deg, #1a1025 0%, #0f0a1a 100%); border: 0.5px solid rgba(255,255,255,0.15); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
     .card-top { display: flex; }
@@ -116,8 +124,8 @@
         <input type="text" id="searchInput" placeholder="Søk etter film eller serie..." autocomplete="off"/>
         <button id="searchBtn" onclick="doSearch()">Søk</button>
       </div>
-      <!-- annonser aktiveres når affiliate-avtaler er på plass -->
-      <!-- <div id="adContainer"></div> -->
+      <div id="adContainer"></div>
+      <div id="filters" class="filters hidden"></div>
       <div id="results"></div>
     </div>
 
@@ -217,6 +225,43 @@
       if (tab === 'watchlist') renderWatchlist();
     }
 
+    // --- Filters ---
+    let activeType = 'all', activeGenre = 'all';
+    let lastResults = [];
+
+    const GENRES = ['Action','Drama','Komedie','Thriller','Sci-Fi','Horror','Romantikk','Animasjon','Dokumentar','Familie'];
+
+    function renderFilters(results) {
+      const foundGenres = new Set();
+      results.forEach(r => { if (r.genres) r.genres.split('·').forEach(g => foundGenres.add(g.trim())); });
+      const visibleGenres = GENRES.filter(g => foundGenres.has(g));
+      if (results.length === 0) { document.getElementById('filters').classList.add('hidden'); return; }
+      document.getElementById('filters').classList.remove('hidden');
+      document.getElementById('filters').innerHTML =
+        `<div class="filter-group">
+          <button class="f-btn ${activeType==='all'?'active':''}" onclick="setType('all')">Alle</button>
+          <button class="f-btn ${activeType==='film'?'active':''}" onclick="setType('film')">🎬 Film</button>
+          <button class="f-btn ${activeType==='show'?'active':''}" onclick="setType('show')">📺 Serie</button>
+        </div>
+        ${visibleGenres.length ? `<div class="filter-divider"></div><div class="filter-group">
+          ${visibleGenres.map(g => `<button class="f-btn ${activeGenre===g?'active':''}" onclick="setGenre('${g}')">${g}</button>`).join('')}
+        </div>` : ''}`;
+    }
+
+    function setType(t) { activeType = t; applyFilters(); }
+    function setGenre(g) { activeGenre = activeGenre === g ? 'all' : g; applyFilters(); }
+
+    function applyFilters() {
+      let filtered = lastResults;
+      if (activeType !== 'all') filtered = filtered.filter(r => r.type === activeType);
+      if (activeGenre !== 'all') filtered = filtered.filter(r => r.genres && r.genres.includes(activeGenre));
+      renderFilters(lastResults);
+      const resDiv = document.getElementById('results');
+      resDiv.innerHTML = filtered.length === 0
+        ? `<div class="empty">Ingen treff med valgte filtre</div>`
+        : renderResults(filtered) + '<p class="footer-note">Info basert på AI-kunnskap · Sjekk tjenesten for oppdatert tilgjengelighet · Noen lenker er affiliatelenker</p>';
+    }
+
     // --- Helpers ---
     function initials(name) { return name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
 
@@ -293,6 +338,9 @@
         const res = await fetch("/api/search", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({query}) });
         const data = await res.json();
         // adDiv.innerHTML = renderAd(...); // aktiveres med affiliate-lenker
+        lastResults = data;
+        activeType = 'all'; activeGenre = 'all';
+        renderFilters(data);
         resDiv.innerHTML = data.length === 0
           ? `<div class="empty">Ingen resultater funnet for «${query}»</div>`
           : renderResults(data) + '<p class="footer-note">Info basert på AI-kunnskap · Sjekk tjenesten for oppdatert tilgjengelighet · Noen lenker er affiliatelenker</p>';
