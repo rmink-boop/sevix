@@ -116,7 +116,8 @@
         <input type="text" id="searchInput" placeholder="Søk etter film eller serie..." autocomplete="off"/>
         <button id="searchBtn" onclick="doSearch()">Søk</button>
       </div>
-      <div id="adContainer"></div>
+      <!-- annonser aktiveres når affiliate-avtaler er på plass -->
+      <!-- <div id="adContainer"></div> -->
       <div id="results"></div>
     </div>
 
@@ -291,9 +292,7 @@
       try {
         const res = await fetch("/api/search", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({query}) });
         const data = await res.json();
-        const foundKeys = data.flatMap(r => (r.services||[]).map(s=>s.key));
-        const ad = ADS.find(a => !foundKeys.includes(a.service)) || ADS[Math.floor(Math.random()*ADS.length)];
-        adDiv.innerHTML = renderAd(ad);
+        // adDiv.innerHTML = renderAd(...); // aktiveres med affiliate-lenker
         resDiv.innerHTML = data.length === 0
           ? `<div class="empty">Ingen resultater funnet for «${query}»</div>`
           : renderResults(data) + '<p class="footer-note">Info basert på AI-kunnskap · Sjekk tjenesten for oppdatert tilgjengelighet · Noen lenker er affiliatelenker</p>';
@@ -304,7 +303,7 @@
     document.getElementById("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
 
     // Init
-    document.getElementById("adContainer").innerHTML = renderAd(ADS[Math.floor(Math.random()*ADS.length)]);
+    // document.getElementById("adContainer").innerHTML = renderAd(ADS[Math.floor(Math.random()*ADS.length)]);
     updateWlBadge();
   </script>
 </body>
