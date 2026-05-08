@@ -8,6 +8,9 @@ export default async function handler(req, res) {
   const { query } = req.body;
   if (!query) return res.status(400).json({ error: "Mangler søkeord" });
 
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "API-nøkkel mangler i miljøvariabler" });
+
   const prompt = `Du er en ekspert på norske streamingtjenester. Brukeren søker etter: "${query}"
 
 Svar KUN med et JSON-array (ingen forklaring, ingen markdown). Finn de beste treffene (maks 4 resultater).
@@ -40,7 +43,7 @@ Bruk din kunnskap om hvilke norske streamingtjenester som faktisk har innholdet.
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
@@ -50,11 +53,16 @@ Bruk din kunnskap om hvilke norske streamingtjenester som faktisk har innholdet.
       }),
     });
 
-    const data = await response.json();
-    const text = data.content?.map(c => c.text || "").join("").replace(/```json|```/g, "").trim();
+    const raw = await response.json();
+
+    if (!response.ok) {
+      return res.status(500).json({ error: `Anthropic feil: ${raw?.error?.message || JSON.stringify(raw)}` });
+    }
+
+    const text = raw.content?.map(c => c.text || "").join("").replace(/```json|```/g, "").trim();
     const results = JSON.parse(text);
     res.status(200).json(results);
   } catch (err) {
-    res.status(500).json({ error: "Noe gikk galt. Prøv igjen." });
+    res.status(500).json({ error: `Serverfeil: ${err.message}` });
   }
 }
