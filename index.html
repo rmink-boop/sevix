@@ -3,77 +3,155 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SEVIX – Norsk Streaming-søk</title>
+  <title>SEVIX – Finn filmer og serier på norske strømmetjenester</title>
+
+  <!-- SEO -->
+  <meta name="description" content="SEVIX hjelper deg finne hvilke norske strømmetjenester som har filmen eller serien du leter etter. Sjekk Netflix, Viaplay, TV 2 Play, Disney+ og mer."/>
+  <meta name="keywords" content="streaming norge, finn film norge, netflix viaplay tv2 disney, norsk strømming søk"/>
+  <meta name="robots" content="index, follow"/>
+  <meta property="og:title" content="SEVIX – Norsk Streaming-søk"/>
+  <meta property="og:description" content="Finn hvilke norske strømmetjenester som har filmen eller serien du leter etter."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://sevix.no"/>
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="SEVIX – Norsk Streaming-søk"/>
+  <meta name="twitter:description" content="Finn hvilke norske strømmetjenester som har filmen eller serien du leter etter."/>
+  <link rel="canonical" href="https://sevix.no"/>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: linear-gradient(160deg, #0d0914 0%, #0a0510 50%, #0d0712 100%); min-height: 100vh; color: #fff; }
-    header { background: linear-gradient(180deg, #1a0a2e 0%, #0d0914 100%); padding: 28px 20px 24px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.08); position: relative; overflow: hidden; }
+
+    /* Theme variables */
+    :root {
+      --bg: linear-gradient(160deg, #0d0914 0%, #0a0510 50%, #0d0712 100%);
+      --header-bg: linear-gradient(180deg, #1a0a2e 0%, #0d0914 100%);
+      --card-bg: linear-gradient(135deg, #1a1025 0%, #0f0a1a 100%);
+      --card-border: rgba(255,255,255,0.15);
+      --text: #fff;
+      --text-sec: rgba(255,255,255,0.4);
+      --text-ter: rgba(255,255,255,0.25);
+      --input-bg: rgba(255,255,255,0.05);
+      --input-border: rgba(255,255,255,0.15);
+      --svc-bg: rgba(255,255,255,0.06);
+      --svc-border: rgba(255,255,255,0.12);
+      --svc-hover: rgba(255,255,255,0.12);
+      --divider: rgba(255,255,255,0.08);
+    }
+    body.light {
+      --bg: linear-gradient(160deg, #f0edf6 0%, #e8e2f0 50%, #ede8f5 100%);
+      --header-bg: linear-gradient(180deg, #2d1b4e 0%, #1a0a2e 100%);
+      --card-bg: linear-gradient(135deg, #fff 0%, #f8f5ff 100%);
+      --card-border: rgba(0,0,0,0.08);
+      --text: #1a0a2e;
+      --text-sec: rgba(0,0,0,0.5);
+      --text-ter: rgba(0,0,0,0.3);
+      --input-bg: rgba(255,255,255,0.8);
+      --input-border: rgba(0,0,0,0.15);
+      --svc-bg: rgba(0,0,0,0.04);
+      --svc-border: rgba(0,0,0,0.08);
+      --svc-hover: rgba(0,0,0,0.08);
+      --divider: rgba(0,0,0,0.08);
+    }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); transition: background 0.3s, color 0.3s; }
+
+    /* Header */
+    header { background: var(--header-bg); padding: 24px 20px 20px; text-align: center; border-bottom: 0.5px solid var(--divider); position: relative; overflow: hidden; }
     header::before { content: ""; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 300px; height: 120px; background: radial-gradient(ellipse, rgba(139,92,246,0.3) 0%, transparent 70%); pointer-events: none; }
-    .tagline { font-size: 11px; letter-spacing: 6px; color: rgba(255,255,255,0.25); margin-bottom: 8px; text-transform: uppercase; }
-    h1 { font-size: 42px; font-weight: 700; letter-spacing: 4px; background: linear-gradient(135deg, #fff 30%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+    .header-top { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .theme-toggle { background: rgba(255,255,255,0.1); border: 0.5px solid rgba(255,255,255,0.2); border-radius: 99px; padding: 5px 12px; font-size: 12px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+    .theme-toggle:hover { background: rgba(255,255,255,0.2); }
+    .tagline { font-size: 11px; letter-spacing: 6px; color: rgba(255,255,255,0.25); margin-bottom: 6px; text-transform: uppercase; }
+    h1 { font-size: 38px; font-weight: 700; letter-spacing: 4px; background: linear-gradient(135deg, #fff 30%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
     .subtitle { font-size: 13px; color: rgba(255,255,255,0.4); }
-    .nav { display: flex; justify-content: center; gap: 4px; padding: 16px 16px 0; max-width: 560px; margin: 0 auto; }
-    .nav-btn { flex: 1; padding: 10px; border: 0.5px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.4); border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+
+    /* Nav */
+    .nav { display: flex; justify-content: center; gap: 4px; padding: 14px 16px 0; max-width: 560px; margin: 0 auto; }
+    .nav-btn { flex: 1; padding: 9px; border: 0.5px solid var(--svc-border); background: transparent; color: var(--text-sec); border-radius: 10px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
     .nav-btn.active { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.5); color: #a78bfa; }
-    main { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
-    .search-box { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 6px 6px 6px 14px; }
-    .search-box input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 15px; padding: 4px 0; caret-color: #a78bfa; }
-    .search-box input::placeholder { color: rgba(255,255,255,0.3); }
-    .search-box button { background: rgba(139,92,246,0.85); color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+
+    main { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; }
+
+    /* Search */
+    .search-box { display: flex; gap: 8px; margin-bottom: 16px; background: var(--input-bg); border: 0.5px solid var(--input-border); border-radius: 12px; padding: 6px 6px 6px 14px; }
+    .search-box input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 15px; padding: 4px 0; caret-color: #a78bfa; min-width: 0; }
+    .search-box input::placeholder { color: var(--text-ter); }
+    .search-box button { background: rgba(139,92,246,0.85); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
     .search-box button:disabled { background: rgba(139,92,246,0.3); cursor: default; }
-    .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-    .f-btn { background: transparent; border: 0.5px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); border-radius: 99px; font-size: 12px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; }
+
+    /* Filters + sort */
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; align-items: center; }
+    .f-btn { background: transparent; border: 0.5px solid var(--svc-border); color: var(--text-sec); border-radius: 99px; font-size: 12px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .f-btn.active { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.6); color: #c4b5fd; }
-    .result-card { background: linear-gradient(135deg, #1a1025 0%, #0f0a1a 100%); border: 0.5px solid rgba(255,255,255,0.15); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .sort-select { margin-left: auto; background: var(--input-bg); border: 0.5px solid var(--svc-border); color: var(--text-sec); border-radius: 8px; font-size: 12px; padding: 5px 10px; cursor: pointer; outline: none; }
+
+    /* Cards */
+    .result-card { background: var(--card-bg); border: 0.5px solid var(--card-border); border-radius: 16px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
     .card-top { display: flex; }
-    .poster-wrap { flex-shrink: 0; width: 90px; position: relative; }
-    .poster-wrap img { width: 90px; height: 135px; object-fit: cover; display: block; }
-    .poster-wrap::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, transparent 60%, #1a1025); }
-    .card-info { flex: 1; padding: 14px 16px 10px; }
-    .card-title { font-weight: 500; font-size: 18px; color: #fff; line-height: 1.2; margin-bottom: 4px; }
-    .card-original { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
-    .card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-    .badge { font-size: 11px; padding: 2px 9px; border-radius: 99px; }
-    .badge-film { background: rgba(229,9,20,0.25); color: #f87171; border: 0.5px solid rgba(229,9,20,0.4); }
-    .badge-show { background: rgba(0,100,255,0.25); color: #60a5fa; border: 0.5px solid rgba(0,100,255,0.4); }
-    .meta-item { font-size: 12px; color: rgba(255,255,255,0.45); }
-    .genres { font-size: 12px; color: rgba(255,255,255,0.4); }
-    .card-actions { padding: 0 14px 10px; display: flex; justify-content: flex-end; }
-    .wl-btn { display: flex; align-items: center; gap: 6px; background: transparent; border: 0.5px solid rgba(255,255,255,0.15); border-radius: 8px; color: rgba(255,255,255,0.5); font-size: 12px; padding: 6px 14px; cursor: pointer; transition: all 0.15s; }
+    .poster-wrap { flex-shrink: 0; width: 80px; position: relative; }
+    .poster-wrap img { width: 80px; height: 120px; object-fit: cover; display: block; }
+    .poster-wrap::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, transparent 50%, #1a1025); }
+    body.light .poster-wrap::after { background: linear-gradient(to right, transparent 50%, #fff); }
+    .card-info { flex: 1; padding: 12px 14px 8px; min-width: 0; }
+    .card-title { font-weight: 600; font-size: 16px; color: var(--text); line-height: 1.2; margin-bottom: 3px; }
+    .card-original { font-size: 11px; color: var(--text-sec); margin-bottom: 5px; }
+    .card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+    .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; }
+    .badge-film { background: rgba(229,9,20,0.15); color: #f87171; border: 0.5px solid rgba(229,9,20,0.3); }
+    .badge-show { background: rgba(0,100,255,0.15); color: #60a5fa; border: 0.5px solid rgba(0,100,255,0.3); }
+    .meta-item { font-size: 11px; color: var(--text-sec); }
+    .genres { font-size: 11px; color: var(--text-ter); }
+    .card-actions { padding: 0 12px 10px; display: flex; justify-content: flex-end; }
+    .wl-btn { display: flex; align-items: center; gap: 5px; background: transparent; border: 0.5px solid var(--svc-border); border-radius: 8px; color: var(--text-sec); font-size: 12px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; }
     .wl-btn:hover { border-color: #a78bfa; color: #a78bfa; }
     .wl-btn.saved { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.5); color: #a78bfa; }
-    .card-services { padding: 10px 14px 14px; border-top: 0.5px solid rgba(255,255,255,0.08); }
-    .service-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.12); margin-bottom: 8px; text-decoration: none; transition: background 0.15s; }
-    .service-row:hover { background: rgba(255,255,255,0.12); }
-    .svc-logo { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; }
-    .svc-name { font-weight: 500; font-size: 14px; color: #fff; }
-    .svc-type { font-size: 12px; margin-top: 1px; }
+    .card-services { padding: 8px 12px 12px; border-top: 0.5px solid var(--divider); }
+    .service-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: var(--svc-bg); border: 0.5px solid var(--svc-border); margin-bottom: 6px; text-decoration: none; transition: background 0.15s; }
+    .service-row:hover { background: var(--svc-hover); }
+    .svc-logo { width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 10px; }
+    .svc-name { font-weight: 500; font-size: 13px; color: var(--text); }
+    .svc-type { font-size: 11px; margin-top: 1px; }
     .free { color: #4ade80; } .paid { color: #f59e0b; }
-    .svc-arrow { font-size: 11px; color: rgba(255,255,255,0.4); margin-left: auto; }
-    .no-svc { font-size: 13px; color: rgba(255,255,255,0.35); padding: 8px 4px; }
-    .wl-empty { text-align: center; padding: 60px 20px; }
-    .wl-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-    .wl-empty-text { font-size: 15px; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
-    .wl-empty-sub { font-size: 13px; color: rgba(255,255,255,0.25); }
-    .wl-count { font-size: 12px; color: rgba(255,255,255,0.3); margin-bottom: 16px; text-align: right; }
-    .wl-card { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #1a1025 0%, #0f0a1a 100%); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
-    .wl-poster { width: 44px; height: 64px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
-    .wl-poster-ph { width: 44px; height: 64px; border-radius: 6px; background: rgba(255,255,255,0.08); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .svc-arrow { font-size: 11px; color: var(--text-ter); margin-left: auto; }
+    .no-svc { font-size: 12px; color: var(--text-ter); padding: 6px 2px; }
+
+    /* Watchlist */
+    .wl-empty { text-align: center; padding: 50px 20px; }
+    .wl-empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+    .wl-empty-text { font-size: 15px; color: var(--text-sec); margin-bottom: 4px; }
+    .wl-empty-sub { font-size: 12px; color: var(--text-ter); }
+    .wl-count { font-size: 12px; color: var(--text-ter); margin-bottom: 14px; text-align: right; }
+    .wl-card { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 0.5px solid var(--card-border); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+    .wl-poster { width: 40px; height: 58px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+    .wl-poster-ph { width: 40px; height: 58px; border-radius: 5px; background: var(--svc-bg); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
     .wl-info { flex: 1; min-width: 0; }
-    .wl-title { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .wl-meta { font-size: 12px; color: rgba(255,255,255,0.4); }
-    .wl-remove { background: transparent; border: none; color: rgba(255,255,255,0.25); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+    .wl-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wl-meta { font-size: 11px; color: var(--text-sec); }
+    .wl-remove { background: transparent; border: none; color: var(--text-ter); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 5px; transition: all 0.15s; flex-shrink: 0; }
     .wl-remove:hover { color: #f87171; background: rgba(248,113,113,0.1); }
-    .wl-clear { display: block; margin: 16px auto 0; background: transparent; border: 0.5px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); font-size: 12px; padding: 8px 20px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .wl-clear { display: block; margin: 14px auto 0; background: transparent; border: 0.5px solid var(--svc-border); color: var(--text-ter); font-size: 12px; padding: 7px 18px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
     .wl-clear:hover { border-color: rgba(248,113,113,0.4); color: #f87171; }
-    .loading, .empty, .error { text-align: center; padding: 32px 0; font-size: 14px; color: rgba(255,255,255,0.4); }
+
+    .loading, .empty, .error { text-align: center; padding: 32px 0; font-size: 14px; color: var(--text-sec); }
     .error { color: #f87171; }
-    .footer-note { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; margin-top: 8px; }
+    .footer-note { font-size: 11px; color: var(--text-ter); text-align: center; margin-top: 8px; }
     .hidden { display: none !important; }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      h1 { font-size: 30px; letter-spacing: 3px; }
+      .poster-wrap { width: 70px; }
+      .poster-wrap img { width: 70px; height: 105px; }
+      .card-title { font-size: 15px; }
+      .search-box button { padding: 8px 12px; font-size: 13px; }
+    }
   </style>
 </head>
 <body>
 <header>
+  <div class="header-top" style="max-width:560px;margin:0 auto;padding:0 4px;">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Mørk</button>
+  </div>
   <div class="tagline">streaming guide</div>
   <h1>SEVIX</h1>
   <p class="subtitle">Finn hvilke norske tjenester som har filmen eller serien din</p>
@@ -86,16 +164,16 @@
 
 <main>
   <div id="tab-search">
-    <div style="height:16px"></div>
+    <div style="height:14px"></div>
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Søk etter film eller serie..." autocomplete="off"/>
       <button id="searchBtn" onclick="doSearch()">Søk</button>
     </div>
-    <div id="filters" class="filters hidden"></div>
+    <div id="filter-bar" class="filter-bar hidden"></div>
     <div id="results"></div>
   </div>
   <div id="tab-watchlist" class="hidden">
-    <div style="height:16px"></div>
+    <div style="height:14px"></div>
     <div id="wl-content"></div>
   </div>
 </main>
@@ -113,181 +191,176 @@ const SERVICES = {
   paramount:  { name:"Paramount+",   color:"#0064FF", url:"https://www.paramountplus.com/no/search/" },
   skyshowtime:{ name:"SkyShowtime",  color:"#FF6B00", url:"https://www.skyshowtime.com/search?q=" },
 };
-
 const GENRES = ['Action','Drama','Komedie','Thriller','Sci-Fi','Horror','Romantikk','Animasjon','Dokumentar','Familie'];
 const TYPE_LABELS = { flatrate:"Inkludert i abonnement", free:"Gratis", ads:"Gratis med reklame", rent:"Leie", buy:"Kjøp" };
 const FREE_TYPES = ["flatrate","free","ads"];
 
-// State
 let allResults = [];
-let activeType = 'all';
-let activeGenre = 'all';
+let activeType = 'all', activeGenre = 'all', activeSort = 'default';
+let isDark = true;
 
-// --- Watchlist (localStorage) ---
+// Theme
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '🌙 Mørk' : '☀️ Lys';
+  localStorage.setItem('sevix_theme', isDark ? 'dark' : 'light');
+}
+(function() {
+  const saved = localStorage.getItem('sevix_theme');
+  if (saved === 'light') { isDark = false; document.body.classList.add('light'); document.addEventListener('DOMContentLoaded', () => { document.getElementById('themeBtn').textContent = '☀️ Lys'; }); }
+})();
+
+// Watchlist
 function wlGet() { try { return JSON.parse(localStorage.getItem('sevix_wl') || '[]'); } catch(e) { return []; } }
 function wlSave(l) { localStorage.setItem('sevix_wl', JSON.stringify(l)); }
 function wlHas(title) { return wlGet().some(i => i.title === title); }
 function wlAdd(item) { if (wlHas(item.title)) return; const l = wlGet(); l.unshift(item); wlSave(l); updateBadge(); }
 function wlRemove(title) { wlSave(wlGet().filter(i => i.title !== title)); updateBadge(); }
-
-function updateBadge() {
-  const n = wlGet().length;
-  document.getElementById('wl-badge').textContent = n > 0 ? '(' + n + ')' : '';
-}
+function updateBadge() { const n = wlGet().length; document.getElementById('wl-badge').textContent = n > 0 ? '('+n+')' : ''; }
 
 function clickSave(idx) {
   const r = allResults[idx];
   if (!r) return;
-  const item = { title: r.title, type: r.type, year: r.year, genres: r.genres, poster: r.poster || null };
-  const btn = document.getElementById('wlbtn-' + idx);
+  const btn = document.getElementById('wlbtn-'+idx);
+  if (!btn) return;
   if (wlHas(r.title)) {
     wlRemove(r.title);
     btn.className = 'wl-btn';
     btn.textContent = '+ Lagre';
   } else {
-    wlAdd(item);
+    wlAdd({ title:r.title, type:r.type, year:r.year, genres:r.genres, poster:r.poster||null });
     btn.className = 'wl-btn saved';
     btn.textContent = '✓ Lagret';
   }
 }
 
-// --- Filters ---
-function renderFilters() {
-  const el = document.getElementById('filters');
-  if (allResults.length === 0) { el.classList.add('hidden'); return; }
+// Filters & sort
+function renderFilterBar() {
+  const el = document.getElementById('filter-bar');
+  if (!allResults.length) { el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
   const foundGenres = new Set();
   allResults.forEach(r => { if (r.genres) r.genres.split('·').forEach(g => foundGenres.add(g.trim())); });
-  const visibleGenres = GENRES.filter(g => foundGenres.has(g));
+  const vg = GENRES.filter(g => foundGenres.has(g));
   let html = ['all','film','show'].map(t => {
-    const lbl = t === 'all' ? 'Alle' : t === 'film' ? '🎬 Film' : '📺 Serie';
+    const lbl = t==='all'?'Alle':t==='film'?'🎬 Film':'📺 Serie';
     return `<button class="f-btn ${activeType===t?'active':''}" onclick="setType('${t}')">${lbl}</button>`;
   }).join('');
-  if (visibleGenres.length) {
-    html += '<span style="width:0.5px;background:rgba(255,255,255,0.1);margin:0 4px;display:inline-block"></span>';
-    html += visibleGenres.map(g =>
-      `<button class="f-btn ${activeGenre===g?'active':''}" onclick="setGenre('${g}')">${g}</button>`
-    ).join('');
-  }
+  if (vg.length) html += vg.map(g => `<button class="f-btn ${activeGenre===g?'active':''}" onclick="setGenre('${g}')">${g}</button>`).join('');
+  html += `<select class="sort-select" onchange="setSort(this.value)">
+    <option value="default" ${activeSort==='default'?'selected':''}>Standard</option>
+    <option value="imdb" ${activeSort==='imdb'?'selected':''}>Høyest IMDB</option>
+    <option value="year_new" ${activeSort==='year_new'?'selected':''}>Nyeste først</option>
+    <option value="year_old" ${activeSort==='year_old'?'selected':''}>Eldste først</option>
+  </select>`;
   el.innerHTML = html;
 }
 
-function setType(t) { activeType = t; renderFilters(); showFiltered(); }
-function setGenre(g) { activeGenre = activeGenre === g ? 'all' : g; renderFilters(); showFiltered(); }
+function setType(t) { activeType=t; renderFilterBar(); showFiltered(); }
+function setGenre(g) { activeGenre=activeGenre===g?'all':g; renderFilterBar(); showFiltered(); }
+function setSort(s) { activeSort=s; showFiltered(); }
+
+function getSorted(arr) {
+  const a = [...arr];
+  if (activeSort==='imdb') return a.sort((x,y)=>(y.imdb||0)-(x.imdb||0));
+  if (activeSort==='year_new') return a.sort((x,y)=>(y.year||0)-(x.year||0));
+  if (activeSort==='year_old') return a.sort((x,y)=>(x.year||0)-(y.year||0));
+  return a;
+}
 
 function showFiltered() {
-  let filtered = allResults;
-  if (activeType !== 'all') filtered = filtered.filter(r => r.type === activeType);
-  if (activeGenre !== 'all') filtered = filtered.filter(r => r.genres && r.genres.includes(activeGenre));
+  let f = allResults;
+  if (activeType!=='all') f = f.filter(r=>r.type===activeType);
+  if (activeGenre!=='all') f = f.filter(r=>r.genres&&r.genres.includes(activeGenre));
+  f = getSorted(f);
   const el = document.getElementById('results');
-  el.innerHTML = filtered.length === 0
+  el.innerHTML = f.length===0
     ? '<div class="empty">Ingen treff med valgte filtre</div>'
-    : filtered.map((r, i) => buildCard(r, allResults.indexOf(r))).join('') +
+    : f.map(r=>buildCard(r, allResults.indexOf(r))).join('') +
       '<p class="footer-note">Info basert på AI-kunnskap · Sjekk tjenesten for oppdatert tilgjengelighet</p>';
 }
 
-// --- Card builder ---
-function ini(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+function ini(n) { return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
 
 function buildCard(r, idx) {
-  const isShow = r.type === 'show';
+  const isShow = r.type==='show';
   const saved = wlHas(r.title);
-  const svcs = (r.services||[]).map(s => {
-    const svc = SERVICES[s.key]; if (!svc) return '';
-    const free = FREE_TYPES.includes(s.type);
-    const lbl = TYPE_LABELS[s.type] || s.type;
-    const price = s.price ? ' — ' + s.price : '';
-    return `<a class="service-row" href="${svc.url + encodeURIComponent(r.title)}" target="_blank" rel="noopener noreferrer">
+  const svcs = (r.services||[]).map(s=>{
+    const svc=SERVICES[s.key]; if(!svc) return '';
+    const fr=FREE_TYPES.includes(s.type);
+    return `<a class="service-row" href="${svc.url+encodeURIComponent(r.title)}" target="_blank" rel="noopener noreferrer">
       <div class="svc-logo" style="background:${svc.color}">${ini(svc.name)}</div>
-      <div><div class="svc-name">${svc.name}</div><div class="svc-type ${free?'free':'paid'}">${lbl}${price}</div></div>
-      <span class="svc-arrow">Åpne →</span>
+      <div><div class="svc-name">${svc.name}</div><div class="svc-type ${fr?'free':'paid'}">${TYPE_LABELS[s.type]||s.type}${s.price?' — '+s.price:''}</div></div>
+      <span class="svc-arrow">→</span>
     </a>`;
   }).join('');
-
   return `<div class="result-card">
     <div class="card-top">
-      ${r.poster ? `<div class="poster-wrap"><img src="${r.poster}" alt=""/></div>` : ''}
+      ${r.poster?`<div class="poster-wrap"><img src="${r.poster}" alt="" loading="lazy"/></div>`:''}
       <div class="card-info">
         <div class="card-title">${r.title}</div>
-        ${r.originalTitle && r.originalTitle !== r.title ? `<div class="card-original">${r.originalTitle}</div>` : ''}
+        ${r.originalTitle&&r.originalTitle!==r.title?`<div class="card-original">${r.originalTitle}</div>`:''}
         <div class="card-meta">
           <span class="badge ${isShow?'badge-show':'badge-film'}">${isShow?'Serie':'Film'}</span>
-          ${r.year ? `<span class="meta-item">${r.year}</span>` : ''}
-          ${r.imdb ? `<span class="meta-item" style="color:#ddd">★ ${r.imdb}</span>` : ''}
-          ${r.runtime ? `<span class="meta-item">${r.runtime}</span>` : ''}
+          ${r.year?`<span class="meta-item">${r.year}</span>`:''}
+          ${r.imdb?`<span class="meta-item" style="color:#f5c518">★ ${r.imdb}</span>`:''}
+          ${r.runtime?`<span class="meta-item">${r.runtime}</span>`:''}
         </div>
-        ${r.genres ? `<div class="genres">${r.genres}</div>` : ''}
+        ${r.genres?`<div class="genres">${r.genres}</div>`:''}
       </div>
     </div>
     <div class="card-actions">
-      <button class="wl-btn ${saved?'saved':''}" id="wlbtn-${idx}" onclick="clickSave(${idx})">
-        ${saved ? '✓ Lagret' : '+ Lagre'}
-      </button>
+      <button class="wl-btn ${saved?'saved':''}" id="wlbtn-${idx}" onclick="clickSave(${idx})">${saved?'✓ Lagret':'+ Lagre'}</button>
     </div>
-    <div class="card-services">
-      ${svcs || '<div class="no-svc">Ikke tilgjengelig på norske streamingtjenester for øyeblikket.</div>'}
-    </div>
+    <div class="card-services">${svcs||'<div class="no-svc">Ikke tilgjengelig på norske strømmetjenester for øyeblikket.</div>'}</div>
   </div>`;
 }
 
-// --- Search ---
 async function doSearch() {
   const query = document.getElementById('searchInput').value.trim();
   if (!query) return;
   const btn = document.getElementById('searchBtn');
-  btn.disabled = true; btn.textContent = 'Søker...';
-  document.getElementById('results').innerHTML = '<div class="loading">Henter strømmeinformasjon...</div>';
-  document.getElementById('filters').classList.add('hidden');
+  btn.disabled=true; btn.textContent='Søker...';
+  document.getElementById('results').innerHTML='<div class="loading">Henter strømmeinformasjon...</div>';
+  document.getElementById('filter-bar').classList.add('hidden');
   try {
-    const res = await fetch('/api/search', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query}) });
+    const res = await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query})});
     const data = await res.json();
-    allResults = data;
-    activeType = 'all'; activeGenre = 'all';
-    renderFilters();
-    showFiltered();
-  } catch(e) {
-    document.getElementById('results').innerHTML = '<div class="error">Noe gikk galt. Prøv igjen.</div>';
-  }
-  btn.disabled = false; btn.textContent = 'Søk';
+    allResults=data; activeType='all'; activeGenre='all'; activeSort='default';
+    renderFilterBar(); showFiltered();
+  } catch(e) { document.getElementById('results').innerHTML='<div class="error">Noe gikk galt. Prøv igjen.</div>'; }
+  btn.disabled=false; btn.textContent='Søk';
 }
 
-// --- Watchlist tab ---
 function renderWatchlist() {
-  const list = wlGet();
-  const el = document.getElementById('wl-content');
-  if (list.length === 0) {
-    el.innerHTML = `<div class="wl-empty">
-      <div class="wl-empty-icon">🎬</div>
-      <div class="wl-empty-text">Listen din er tom</div>
-      <div class="wl-empty-sub">Søk etter filmer og serier og trykk "+ Lagre"</div>
-    </div>`;
+  const list=wlGet();
+  const el=document.getElementById('wl-content');
+  if(!list.length){
+    el.innerHTML=`<div class="wl-empty"><div class="wl-empty-icon">🎬</div><div class="wl-empty-text">Listen din er tom</div><div class="wl-empty-sub">Søk etter filmer og serier og trykk "+ Lagre"</div></div>`;
     return;
   }
-  el.innerHTML = `<div class="wl-count">${list.length} tittel${list.length!==1?'er':''}</div>` +
-    list.map((item, i) => `
-      <div class="wl-card">
-        ${item.poster
-          ? `<img class="wl-poster" src="${item.poster}" alt=""/>`
-          : `<div class="wl-poster-ph">🎬</div>`}
-        <div class="wl-info">
-          <div class="wl-title">${item.title}</div>
-          <div class="wl-meta">${[item.type==='show'?'Serie':'Film', item.year, item.genres].filter(Boolean).join(' · ')}</div>
-        </div>
-        <button class="wl-remove" onclick="wlRemove('${item.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}');renderWatchlist();" title="Fjern">×</button>
-      </div>`).join('') +
+  el.innerHTML=`<div class="wl-count">${list.length} tittel${list.length!==1?'er':''}</div>`+
+    list.map(item=>`<div class="wl-card">
+      ${item.poster?`<img class="wl-poster" src="${item.poster}" alt="" loading="lazy"/>`:`<div class="wl-poster-ph">🎬</div>`}
+      <div class="wl-info">
+        <div class="wl-title">${item.title}</div>
+        <div class="wl-meta">${[item.type==='show'?'Serie':'Film',item.year,item.genres].filter(Boolean).join(' · ')}</div>
+      </div>
+      <button class="wl-remove" onclick="wlRemove(this.dataset.t);renderWatchlist();" data-t="${item.title.replace(/"/g,'&quot;')}">×</button>
+    </div>`).join('')+
     `<button class="wl-clear" onclick="if(confirm('Tøm hele listen?')){wlSave([]);updateBadge();renderWatchlist();}">Tøm listen</button>`;
 }
 
-// --- Tab nav ---
 function showTab(tab) {
-  document.getElementById('tab-search').classList.toggle('hidden', tab !== 'search');
-  document.getElementById('tab-watchlist').classList.toggle('hidden', tab !== 'watchlist');
-  document.getElementById('btn-search').classList.toggle('active', tab === 'search');
-  document.getElementById('btn-watchlist').classList.toggle('active', tab === 'watchlist');
-  if (tab === 'watchlist') renderWatchlist();
+  document.getElementById('tab-search').classList.toggle('hidden',tab!=='search');
+  document.getElementById('tab-watchlist').classList.toggle('hidden',tab!=='watchlist');
+  document.getElementById('btn-search').classList.toggle('active',tab==='search');
+  document.getElementById('btn-watchlist').classList.toggle('active',tab==='watchlist');
+  if(tab==='watchlist') renderWatchlist();
 }
 
-document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 updateBadge();
 </script>
 </body>
