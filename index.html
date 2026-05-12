@@ -137,6 +137,34 @@
     .footer-note { font-size: 11px; color: var(--text-ter); text-align: center; margin-top: 8px; }
     .hidden { display: none !important; }
 
+    /* Topp 10 */
+    .topp10-service { margin-bottom: 28px; }
+    .topp10-service-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .topp10-logo { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 9px; flex-shrink: 0; }
+    .topp10-service-name { font-size: 15px; font-weight: 500; color: var(--text); }
+    .topp10-list { display: flex; flex-direction: column; gap: 6px; }
+    .topp10-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--card-bg); border: 0.5px solid var(--card-border); border-radius: 10px; cursor: pointer; transition: border-color 0.15s; text-decoration: none; }
+    .topp10-item:hover { border-color: rgba(139,92,246,0.4); }
+    .topp10-rank { font-size: 18px; font-weight: 700; color: var(--text-ter); width: 24px; text-align: center; flex-shrink: 0; }
+    .topp10-rank.gold { color: #F5C518; }
+    .topp10-rank.silver { color: #aaa; }
+    .topp10-rank.bronze { color: #cd7f32; }
+    .topp10-info { flex: 1; min-width: 0; }
+    .topp10-title { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topp10-meta { font-size: 11px; color: var(--text-ter); margin-top: 2px; }
+    .topp10-badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; flex-shrink: 0; }
+
+    /* Om */
+    .om-section { display: flex; flex-direction: column; gap: 0; }
+    .om-title { font-size: 16px; font-weight: 500; color: var(--text); margin: 20px 0 8px; }
+    .om-title:first-child { margin-top: 0; }
+    .om-text { font-size: 14px; color: var(--text-sec); line-height: 1.7; }
+    .om-services { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .om-svc { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; }
+    .om-link { color: #a78bfa; text-decoration: none; }
+    .om-link:hover { text-decoration: underline; }
+    .om-footer { font-size: 12px; color: var(--text-ter); margin-top: 32px; padding-top: 16px; border-top: 0.5px solid var(--divider); }
+
     /* Mobile */
     @media (max-width: 480px) {
       h1 { font-size: 30px; letter-spacing: 3px; }
@@ -159,7 +187,9 @@
 
 <div class="nav">
   <button class="nav-btn active" id="btn-search" onclick="showTab('search')">🔍 Søk</button>
+  <button class="nav-btn" id="btn-topp10" onclick="showTab('topp10')">🏆 Topp 10</button>
   <button class="nav-btn" id="btn-watchlist" onclick="showTab('watchlist')">📋 Min liste <span id="wl-badge"></span></button>
+  <button class="nav-btn" id="btn-om" onclick="showTab('om')">ℹ️ Om</button>
 </div>
 
 <main>
@@ -176,6 +206,44 @@
   <div id="tab-watchlist" class="hidden">
     <div style="height:14px"></div>
     <div id="wl-content"></div>
+  </div>
+
+  <div id="tab-topp10" class="hidden">
+    <div style="height:14px"></div>
+    <div id="topp10-content"></div>
+  </div>
+
+  <div id="tab-om" class="hidden">
+    <div style="height:20px"></div>
+    <div class="om-section">
+      <h2 class="om-title">Hva er SEVIX?</h2>
+      <p class="om-text">SEVIX er Norges enkleste verktøy for å finne ut hvilke norske strømmetjenester som har filmen eller serien du leter etter. I stedet for å åpne Netflix, Viaplay, TV 2 Play og Disney+ én etter én, søker du én gang hos oss og får svaret med én gang.</p>
+
+      <h2 class="om-title">Slik fungerer det</h2>
+      <p class="om-text">Skriv inn tittelen på en film eller serie i søkefeltet. SEVIX bruker kunstig intelligens til å finne ut hvilke norske strømmetjenester som har innholdet, om det er inkludert i abonnementet eller koster ekstra, og lenker deg direkte dit.</p>
+
+      <h2 class="om-title">Hvilke tjenester dekker vi?</h2>
+      <div class="om-services">
+        <span class="om-svc" style="background:#E5091422;color:#E50914">Netflix</span>
+        <span class="om-svc" style="background:#0010FF22;color:#6070FF">Max</span>
+        <span class="om-svc" style="background:#113CCF22;color:#113CCF">Disney+</span>
+        <span class="om-svc" style="background:#6B21A822;color:#9B51E0">Viaplay</span>
+        <span class="om-svc" style="background:#E4000F22;color:#E4000F">TV 2 Play</span>
+        <span class="om-svc" style="background:#003A7022;color:#003A70">NRK TV</span>
+        <span class="om-svc" style="background:#00A8E022;color:#00A8E0">Prime Video</span>
+        <span class="om-svc" style="background:#0064FF22;color:#0064FF">Paramount+</span>
+        <span class="om-svc" style="background:#55555522;color:#888">Apple TV+</span>
+        <span class="om-svc" style="background:#FF6B0022;color:#FF6B00">SkyShowtime</span>
+      </div>
+
+      <h2 class="om-title">Personvern</h2>
+      <p class="om-text">SEVIX samler ikke inn personopplysninger. Watchlisten din lagres lokalt i nettleseren din og sendes aldri til oss. Vi bruker ingen sporings-cookies. Noen lenker på siden kan være affiliatelenker – dette betyr at vi kan motta en liten provisjon dersom du tegner abonnement via oss, uten ekstra kostnad for deg.</p>
+
+      <h2 class="om-title">Kontakt</h2>
+      <p class="om-text">Har du spørsmål, tilbakemeldinger eller ønsker å annonsere på SEVIX? Send oss en e-post på <a href="mailto:hei@sevix.no" class="om-link">hei@sevix.no</a></p>
+
+      <div class="om-footer">SEVIX © 2026 · <a href="mailto:hei@sevix.no" class="om-link">hei@sevix.no</a></div>
+    </div>
   </div>
 </main>
 
@@ -355,11 +423,12 @@ function renderWatchlist() {
 }
 
 function showTab(tab) {
-  document.getElementById('tab-search').classList.toggle('hidden',tab!=='search');
-  document.getElementById('tab-watchlist').classList.toggle('hidden',tab!=='watchlist');
-  document.getElementById('btn-search').classList.toggle('active',tab==='search');
-  document.getElementById('btn-watchlist').classList.toggle('active',tab==='watchlist');
+  ['search','topp10','watchlist','om'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+    document.getElementById('btn-'+t).classList.toggle('active', t===tab);
+  });
   if(tab==='watchlist') renderWatchlist();
+  if(tab==='topp10') renderTopp10();
 }
 
 document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
