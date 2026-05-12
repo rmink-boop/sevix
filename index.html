@@ -428,7 +428,7 @@ function showTab(tab) {
     document.getElementById('btn-'+t).classList.toggle('active', t===tab);
   });
   if(tab==='watchlist') renderWatchlist();
-  if(tab==='topp10') renderTopp10();
+  if(tab==='topp10') setTimeout(renderTopp10, 0);
 }
 
 document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
