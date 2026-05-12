@@ -1,500 +1,134 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SEVIX – Finn filmer og serier på norske strømmetjenester</title>
-  <meta name="description" content="SEVIX hjelper deg finne hvilke norske strømmetjenester som har filmen eller serien du leter etter."/>
-  <meta name="keywords" content="streaming norge, finn film norge, netflix viaplay tv2 disney, norsk strømming søk"/>
-  <meta name="robots" content="index, follow"/>
-  <meta property="og:title" content="SEVIX – Norsk Streaming-søk"/>
-  <meta property="og:description" content="Finn hvilke norske strømmetjenester som har filmen eller serien du leter etter."/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://sevix.no"/>
-  <meta name="twitter:card" content="summary"/>
-  <link rel="canonical" href="https://sevix.no"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: linear-gradient(160deg,#0d0914 0%,#0a0510 50%,#0d0712 100%);
-      --hbg: linear-gradient(180deg,#1a0a2e 0%,#0d0914 100%);
-      --cbg: linear-gradient(135deg,#1a1025 0%,#0f0a1a 100%);
-      --cb: rgba(255,255,255,0.15);
-      --tx: #fff; --tx2: rgba(255,255,255,0.4); --tx3: rgba(255,255,255,0.22);
-      --ibg: rgba(255,255,255,0.05); --ib: rgba(255,255,255,0.15);
-      --sb: rgba(255,255,255,0.06); --sbb: rgba(255,255,255,0.12); --sh: rgba(255,255,255,0.12);
-      --div: rgba(255,255,255,0.08);
-    }
-    body.light {
-      --bg: linear-gradient(160deg,#f0edf6 0%,#e8e2f0 50%,#ede8f5 100%);
-      --hbg: linear-gradient(180deg,#2d1b4e 0%,#1a0a2e 100%);
-      --cbg: linear-gradient(135deg,#fff 0%,#f8f5ff 100%);
-      --cb: rgba(0,0,0,0.08);
-      --tx: #1a0a2e; --tx2: rgba(0,0,0,0.5); --tx3: rgba(0,0,0,0.28);
-      --ibg: rgba(255,255,255,0.8); --ib: rgba(0,0,0,0.15);
-      --sb: rgba(0,0,0,0.04); --sbb: rgba(0,0,0,0.08); --sh: rgba(0,0,0,0.08);
-      --div: rgba(0,0,0,0.08);
-    }
-    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background: var(--bg); min-height:100vh; color:var(--tx); transition: background 0.3s,color 0.3s; }
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-    header { background:var(--hbg); padding:24px 20px 20px; text-align:center; border-bottom:0.5px solid var(--div); position:relative; overflow:hidden; }
-    header::before { content:""; position:absolute; top:-40px; left:50%; transform:translateX(-50%); width:300px; height:120px; background:radial-gradient(ellipse,rgba(139,92,246,0.3) 0%,transparent 70%); pointer-events:none; }
-    .header-top { display:flex; justify-content:flex-end; max-width:560px; margin:0 auto 8px; padding:0 4px; }
-    .theme-btn { background:rgba(255,255,255,0.1); border:0.5px solid rgba(255,255,255,0.2); border-radius:99px; padding:5px 12px; font-size:12px; color:rgba(255,255,255,0.7); cursor:pointer; }
-    .tagline { font-size:11px; letter-spacing:6px; color:rgba(255,255,255,0.25); margin-bottom:6px; text-transform:uppercase; }
-    h1 { font-size:38px; font-weight:700; letter-spacing:4px; background:linear-gradient(135deg,#fff 30%,#a78bfa 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:4px; }
-    .subtitle { font-size:13px; color:rgba(255,255,255,0.4); }
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ error: "Mangler søkeord" });
 
-    .nav { display:flex; gap:4px; padding:14px 16px 0; max-width:560px; margin:0 auto; }
-    .nav-btn { flex:1; padding:9px 4px; border:0.5px solid var(--sbb); background:transparent; color:var(--tx2); border-radius:10px; font-size:12px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
-    .nav-btn.active { background:rgba(139,92,246,0.2); border-color:rgba(139,92,246,0.5); color:#a78bfa; }
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const tmdbKey = process.env.TMDB_API_KEY;
+  if (!anthropicKey) return res.status(500).json({ error: "API-nøkkel mangler" });
 
-    main { max-width:560px; margin:0 auto; padding:16px 16px 40px; }
-    .hidden { display:none !important; }
+  const isTopp10 = query.startsWith('__topp10__');
+  const isRec = query.startsWith('__recommendations__');
+  const cleanQuery = isRec ? query.replace('__recommendations__', '') : isTopp10 ? query.replace('__topp10__', '') : query;
 
-    /* Search */
-    .search-box { display:flex; gap:8px; margin-bottom:16px; background:var(--ibg); border:0.5px solid var(--ib); border-radius:12px; padding:6px 6px 6px 14px; }
-    .search-box input { flex:1; background:transparent; border:none; outline:none; color:var(--tx); font-size:15px; padding:4px 0; caret-color:#a78bfa; min-width:0; }
-    .search-box input::placeholder { color:var(--tx3); }
-    .search-box button { background:rgba(139,92,246,0.85); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:14px; font-weight:500; cursor:pointer; flex-shrink:0; }
-    .search-box button:disabled { background:rgba(139,92,246,0.3); cursor:default; }
+  const prompt = isTopp10
+    ? `Du er en ekspert på norske strømmetjenester. Lag en topp 10-liste over de mest populære og anbefalte titlene som er tilgjengelige på ${cleanQuery} i Norge akkurat nå.
 
-    /* Filters */
-    .filter-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; align-items:center; }
-    .f-btn { background:transparent; border:0.5px solid var(--sbb); color:var(--tx2); border-radius:99px; font-size:12px; padding:5px 12px; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
-    .f-btn.active { background:rgba(139,92,246,0.2); border-color:rgba(139,92,246,0.6); color:#c4b5fd; }
-    .sort-sel { margin-left:auto; background:var(--ibg); border:0.5px solid var(--sbb); color:var(--tx2); border-radius:8px; font-size:12px; padding:5px 10px; cursor:pointer; outline:none; }
-
-    /* Cards */
-    .result-card { background:var(--cbg); border:0.5px solid var(--cb); border-radius:16px; overflow:hidden; margin-bottom:14px; box-shadow:0 4px 24px rgba(0,0,0,0.2); }
-    .card-top { display:flex; }
-    .poster-wrap { flex-shrink:0; width:80px; position:relative; }
-    .poster-wrap img { width:80px; height:120px; object-fit:cover; display:block; }
-    .poster-wrap::after { content:""; position:absolute; inset:0; background:linear-gradient(to right,transparent 50%,#1a1025); }
-    body.light .poster-wrap::after { background:linear-gradient(to right,transparent 50%,#fff); }
-    .card-info { flex:1; padding:12px 14px 8px; min-width:0; }
-    .card-title { font-weight:600; font-size:16px; color:var(--tx); line-height:1.2; margin-bottom:3px; }
-    .card-orig { font-size:11px; color:var(--tx2); margin-bottom:5px; }
-    .card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
-    .badge { font-size:10px; padding:2px 8px; border-radius:99px; }
-    .badge-film { background:rgba(229,9,20,0.15); color:#f87171; border:0.5px solid rgba(229,9,20,0.3); }
-    .badge-show { background:rgba(0,100,255,0.15); color:#60a5fa; border:0.5px solid rgba(0,100,255,0.3); }
-    .meta { font-size:11px; color:var(--tx2); }
-    .genres { font-size:11px; color:var(--tx3); }
-    .card-actions { padding:0 12px 10px; display:flex; justify-content:flex-end; }
-    .wl-btn { display:flex; align-items:center; gap:5px; background:transparent; border:0.5px solid var(--sbb); border-radius:8px; color:var(--tx2); font-size:12px; padding:5px 12px; cursor:pointer; transition:all 0.15s; }
-    .wl-btn:hover { border-color:#a78bfa; color:#a78bfa; }
-    .wl-btn.saved { background:rgba(139,92,246,0.15); border-color:rgba(139,92,246,0.5); color:#a78bfa; }
-    .card-svcs { padding:8px 12px 12px; border-top:0.5px solid var(--div); }
-    .svc-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; background:var(--sb); border:0.5px solid var(--sbb); margin-bottom:6px; text-decoration:none; transition:background 0.15s; }
-    .svc-row:hover { background:var(--sh); }
-    .svc-logo { width:32px; height:32px; border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:10px; }
-    .svc-name { font-weight:500; font-size:13px; color:var(--tx); }
-    .svc-type { font-size:11px; margin-top:1px; }
-    .free { color:#4ade80; } .paid { color:#f59e0b; }
-    .svc-arr { font-size:11px; color:var(--tx3); margin-left:auto; }
-    .no-svc { font-size:12px; color:var(--tx3); padding:6px 2px; }
-
-    /* Recommendations */
-    .rec-section { margin-top:24px; }
-    .rec-title { font-size:14px; font-weight:500; color:var(--tx); margin-bottom:12px; }
-    .rec-sub { font-size:12px; color:var(--tx3); font-weight:400; margin-left:6px; }
-    .rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
-    .rec-card { background:var(--cbg); border:0.5px solid var(--cb); border-radius:12px; overflow:hidden; cursor:pointer; transition:border-color 0.15s,transform 0.15s; }
-    .rec-card:hover { border-color:rgba(139,92,246,0.5); transform:translateY(-2px); }
-    .rec-poster { width:100%; aspect-ratio:2/3; object-fit:cover; display:block; background:var(--sb); }
-    .rec-poster-ph { width:100%; aspect-ratio:2/3; display:flex; align-items:center; justify-content:center; font-size:28px; background:var(--sb); }
-    .rec-info { padding:8px 10px 10px; }
-    .rec-name { font-size:12px; font-weight:500; color:var(--tx); line-height:1.3; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .rec-meta { font-size:11px; color:var(--tx3); }
-    .rec-reason { font-size:11px; color:#a78bfa; margin-top:3px; line-height:1.3; }
-
-    /* Topp 10 */
-    .t10-svc { margin-bottom:28px; }
-    .t10-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-    .t10-logo { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:9px; flex-shrink:0; }
-    .t10-svc-name { font-size:15px; font-weight:500; color:var(--tx); }
-    .t10-item { display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--cbg); border:0.5px solid var(--cb); border-radius:10px; cursor:pointer; transition:border-color 0.15s; margin-bottom:6px; }
-    .t10-item:hover { border-color:rgba(139,92,246,0.4); }
-    .t10-rank { font-size:17px; font-weight:700; color:var(--tx3); width:22px; text-align:center; flex-shrink:0; }
-    .gold { color:#F5C518; } .silver { color:#aaa; } .bronze { color:#cd7f32; }
-    .t10-info { flex:1; min-width:0; }
-    .t10-name { font-size:14px; font-weight:500; color:var(--tx); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .t10-meta { font-size:11px; color:var(--tx3); margin-top:2px; }
-    .t10-skeleton { opacity:0.25; pointer-events:none; }
-    .t10-skel-bar { background:var(--sb); border-radius:4px; height:13px; }
-
-    /* Watchlist */
-    .wl-empty { text-align:center; padding:50px 20px; }
-    .wl-empty-icon { font-size:36px; margin-bottom:10px; opacity:0.4; }
-    .wl-empty-tx { font-size:15px; color:var(--tx2); margin-bottom:4px; }
-    .wl-empty-sub { font-size:12px; color:var(--tx3); }
-    .wl-count { font-size:12px; color:var(--tx3); margin-bottom:14px; text-align:right; }
-    .wl-card { display:flex; align-items:center; gap:12px; background:var(--cbg); border:0.5px solid var(--cb); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
-    .wl-poster { width:40px; height:58px; border-radius:5px; object-fit:cover; flex-shrink:0; }
-    .wl-ph { width:40px; height:58px; border-radius:5px; background:var(--sb); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; }
-    .wl-info { flex:1; min-width:0; }
-    .wl-name { font-size:14px; font-weight:500; color:var(--tx); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .wl-meta { font-size:11px; color:var(--tx2); }
-    .wl-rm { background:transparent; border:none; color:var(--tx3); font-size:18px; cursor:pointer; padding:4px 8px; border-radius:5px; transition:all 0.15s; }
-    .wl-rm:hover { color:#f87171; background:rgba(248,113,113,0.1); }
-    .wl-clear { display:block; margin:14px auto 0; background:transparent; border:0.5px solid var(--sbb); color:var(--tx3); font-size:12px; padding:7px 18px; border-radius:8px; cursor:pointer; }
-    .wl-clear:hover { border-color:rgba(248,113,113,0.4); color:#f87171; }
-
-    /* Om */
-    .om-title { font-size:16px; font-weight:500; color:var(--tx); margin:20px 0 8px; }
-    .om-title:first-child { margin-top:0; }
-    .om-text { font-size:14px; color:var(--tx2); line-height:1.7; }
-    .om-svcs { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-    .om-svc { font-size:12px; font-weight:500; padding:4px 12px; border-radius:99px; }
-    .om-link { color:#a78bfa; text-decoration:none; }
-    .om-link:hover { text-decoration:underline; }
-    .om-footer { font-size:12px; color:var(--tx3); margin-top:32px; padding-top:16px; border-top:0.5px solid var(--div); }
-
-    .loading,.empty,.error { text-align:center; padding:32px 0; font-size:14px; color:var(--tx2); }
-    .error { color:#f87171; }
-    .foot-note { font-size:11px; color:var(--tx3); text-align:center; margin-top:8px; }
-
-    @media(max-width:480px) {
-      h1 { font-size:30px; letter-spacing:3px; }
-      .poster-wrap { width:70px; }
-      .poster-wrap img { width:70px; height:105px; }
-      .nav-btn { font-size:11px; padding:8px 2px; }
-    }
-  </style>
-</head>
-<body>
-<header>
-  <div class="header-top">
-    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 Mørk</button>
-  </div>
-  <div class="tagline">streaming guide</div>
-  <h1>SEVIX</h1>
-  <p class="subtitle">Finn hvilke norske tjenester som har filmen eller serien din</p>
-</header>
-
-<div class="nav">
-  <button class="nav-btn active" id="btn-search" onclick="showTab('search')">🔍 Søk</button>
-  <button class="nav-btn" id="btn-topp10" onclick="showTab('topp10')">🏆 Topp 10</button>
-  <button class="nav-btn" id="btn-watchlist" onclick="showTab('watchlist')">📋 Min liste <span id="wl-badge"></span></button>
-  <button class="nav-btn" id="btn-om" onclick="showTab('om')">ℹ️ Om</button>
-</div>
-
-<main>
-  <!-- SEARCH -->
-  <div id="tab-search">
-    <div style="height:14px"></div>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Søk etter film eller serie..." autocomplete="off"/>
-      <button id="searchBtn" onclick="doSearch()">Søk</button>
-    </div>
-    <div id="filter-bar" class="filter-bar hidden"></div>
-    <div id="results"></div>
-    <div id="recommendations" class="hidden"></div>
-  </div>
-
-  <!-- TOPP 10 -->
-  <div id="tab-topp10" class="hidden">
-    <div style="height:14px"></div>
-    <div id="topp10-content"></div>
-  </div>
-
-  <!-- WATCHLIST -->
-  <div id="tab-watchlist" class="hidden">
-    <div style="height:14px"></div>
-    <div id="wl-content"></div>
-  </div>
-
-  <!-- OM -->
-  <div id="tab-om" class="hidden">
-    <div style="height:20px"></div>
-    <h2 class="om-title">Hva er SEVIX?</h2>
-    <p class="om-text">SEVIX er Norges enkleste verktøy for å finne ut hvilke norske strømmetjenester som har filmen eller serien du leter etter. I stedet for å åpne Netflix, Viaplay, TV 2 Play og Disney+ én etter én, søker du én gang hos oss og får svaret med én gang.</p>
-    <h2 class="om-title">Slik fungerer det</h2>
-    <p class="om-text">Skriv inn tittelen på en film eller serie i søkefeltet. SEVIX bruker kunstig intelligens til å finne ut hvilke norske strømmetjenester som har innholdet, om det er inkludert i abonnementet eller koster ekstra, og lenker deg direkte dit.</p>
-    <h2 class="om-title">Hvilke tjenester dekker vi?</h2>
-    <div class="om-svcs">
-      <span class="om-svc" style="background:#E5091422;color:#E50914">Netflix</span>
-      <span class="om-svc" style="background:#0010FF22;color:#6070FF">Max</span>
-      <span class="om-svc" style="background:#113CCF22;color:#113CCF">Disney+</span>
-      <span class="om-svc" style="background:#6B21A822;color:#9B51E0">Viaplay</span>
-      <span class="om-svc" style="background:#E4000F22;color:#E4000F">TV 2 Play</span>
-      <span class="om-svc" style="background:#003A7022;color:#5588AA">NRK TV</span>
-      <span class="om-svc" style="background:#00A8E022;color:#00A8E0">Prime Video</span>
-      <span class="om-svc" style="background:#0064FF22;color:#0064FF">Paramount+</span>
-      <span class="om-svc" style="background:#55555522;color:#888">Apple TV+</span>
-      <span class="om-svc" style="background:#FF6B0022;color:#FF6B00">SkyShowtime</span>
-    </div>
-    <h2 class="om-title">Personvern</h2>
-    <p class="om-text">SEVIX samler ikke inn personopplysninger. Watchlisten din lagres lokalt i nettleseren din og sendes aldri til oss. Vi bruker ingen sporings-cookies. Noen lenker kan være affiliatelenker – vi kan motta en liten provisjon dersom du tegner abonnement via oss, uten ekstra kostnad for deg.</p>
-    <h2 class="om-title">Kontakt</h2>
-    <p class="om-text">Spørsmål, tilbakemeldinger eller annonsering? Send e-post til <a href="mailto:rmink@online.no" class="om-link">rmink@online.no</a></p>
-    <div class="om-footer">SEVIX © 2026 · <a href="mailto:rmink@online.no" class="om-link">rmink@online.no</a></div>
-  </div>
-</main>
-
-<script>
-const SVCS = {
-  netflix:    {name:"Netflix",      color:"#E50914",url:"https://www.netflix.com/no/search?q="},
-  hbo:        {name:"Max",          color:"#0010FF",url:"https://www.max.com/no/search?q="},
-  disney:     {name:"Disney+",      color:"#113CCF",url:"https://www.disneyplus.com/search/"},
-  apple:      {name:"Apple TV+",    color:"#555555",url:"https://tv.apple.com/no/search?term="},
-  viaplay:    {name:"Viaplay",      color:"#6B21A8",url:"https://viaplay.com/no/search?q="},
-  tv2:        {name:"TV 2 Play",    color:"#E4000F",url:"https://play.tv2.no/search?q="},
-  nrk:        {name:"NRK TV",       color:"#003A70",url:"https://tv.nrk.no/search#query="},
-  prime:      {name:"Prime Video",  color:"#00A8E0",url:"https://www.primevideo.com/search/ref=atv_nb_sr?phrase="},
-  paramount:  {name:"Paramount+",   color:"#0064FF",url:"https://www.paramountplus.com/no/search/"},
-  skyshowtime:{name:"SkyShowtime",  color:"#FF6B00",url:"https://www.skyshowtime.com/search?q="},
-};
-const GENRES = ['Action','Drama','Komedie','Thriller','Sci-Fi','Horror','Romantikk','Animasjon','Dokumentar','Familie'];
-const TLBL = {flatrate:"Inkludert i abonnement",free:"Gratis",ads:"Gratis med reklame",rent:"Leie",buy:"Kjøp"};
-const FREE = ["flatrate","free","ads"];
-
-let allResults=[], activeType='all', activeGenre='all', activeSort='default';
-let isDark=true, allRecs=[], recCache={}, t10Cache={};
-
-// Theme
-function toggleTheme() {
-  isDark=!isDark;
-  document.body.classList.toggle('light',!isDark);
-  document.getElementById('themeBtn').textContent=isDark?'🌙 Mørk':'☀️ Lys';
-  localStorage.setItem('sevix_theme',isDark?'dark':'light');
-}
-(function(){
-  if(localStorage.getItem('sevix_theme')==='light'){
-    isDark=false; document.body.classList.add('light');
-    document.addEventListener('DOMContentLoaded',()=>{document.getElementById('themeBtn').textContent='☀️ Lys';});
+Svar KUN med et JSON-array på 10 titler. Format:
+[
+  {
+    "title": "Tittel",
+    "originalTitle": "Original hvis ulik",
+    "type": "film" eller "show",
+    "year": 2024,
+    "imdb": 8.5,
+    "genres": "Drama · Thriller",
+    "services": [{ "key": "${cleanQuery.toLowerCase().replace(' ','')}", "type": "flatrate" }]
   }
-})();
+]
+Svar kun med JSON.`
+    : isRec
+    ? `Du er en ekspert på film og serier. Brukeren har nettopp søkt etter: ${cleanQuery}
 
-// Helpers
-function ini(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+Foreslå 6 andre titler de vil like basert på dette. Velg titler som faktisk finnes på norske strømmetjenester.
 
-// Watchlist
-function wlGet(){try{return JSON.parse(localStorage.getItem('sevix_wl')||'[]');}catch(e){return[];}}
-function wlSave(l){localStorage.setItem('sevix_wl',JSON.stringify(l));}
-function wlHas(t){return wlGet().some(i=>i.title===t);}
-function wlAdd(item){if(wlHas(item.title))return;const l=wlGet();l.unshift(item);wlSave(l);updateBadge();}
-function wlRemove(t){wlSave(wlGet().filter(i=>i.title!==t));updateBadge();}
-function updateBadge(){const n=wlGet().length;document.getElementById('wl-badge').textContent=n>0?'('+n+')':'';}
-
-function clickSave(idx){
-  const r=allResults[idx]; if(!r)return;
-  const btn=document.getElementById('wlbtn-'+idx); if(!btn)return;
-  if(wlHas(r.title)){wlRemove(r.title);btn.className='wl-btn';btn.textContent='+ Lagre';}
-  else{wlAdd({title:r.title,type:r.type,year:r.year,genres:r.genres,poster:r.poster||null});btn.className='wl-btn saved';btn.textContent='✓ Lagret';}
-}
-
-// Filters
-function renderFilterBar(){
-  const el=document.getElementById('filter-bar');
-  if(!allResults.length){el.classList.add('hidden');return;}
-  el.classList.remove('hidden');
-  const fg=new Set();
-  allResults.forEach(r=>{if(r.genres)r.genres.split('·').forEach(g=>fg.add(g.trim()));});
-  const vg=GENRES.filter(g=>fg.has(g));
-  let h=['all','film','show'].map(t=>{
-    const l=t==='all'?'Alle':t==='film'?'🎬 Film':'📺 Serie';
-    return `<button class="f-btn ${activeType===t?'active':''}" onclick="setType('${t}')">${l}</button>`;
-  }).join('');
-  if(vg.length)h+=vg.map(g=>`<button class="f-btn ${activeGenre===g?'active':''}" onclick="setGenre('${g}')">${g}</button>`).join('');
-  h+=`<select class="sort-sel" onchange="setSort(this.value)">
-    <option value="default" ${activeSort==='default'?'selected':''}>Standard</option>
-    <option value="imdb" ${activeSort==='imdb'?'selected':''}>Høyest IMDB</option>
-    <option value="year_new" ${activeSort==='year_new'?'selected':''}>Nyeste</option>
-    <option value="year_old" ${activeSort==='year_old'?'selected':''}>Eldste</option>
-  </select>`;
-  el.innerHTML=h;
-}
-function setType(t){activeType=t;renderFilterBar();showFiltered();}
-function setGenre(g){activeGenre=activeGenre===g?'all':g;renderFilterBar();showFiltered();}
-function setSort(s){activeSort=s;showFiltered();}
-function getSorted(a){
-  const r=[...a];
-  if(activeSort==='imdb')return r.sort((x,y)=>(y.imdb||0)-(x.imdb||0));
-  if(activeSort==='year_new')return r.sort((x,y)=>(y.year||0)-(x.year||0));
-  if(activeSort==='year_old')return r.sort((x,y)=>(x.year||0)-(y.year||0));
-  return r;
-}
-function showFiltered(){
-  let f=allResults;
-  if(activeType!=='all')f=f.filter(r=>r.type===activeType);
-  if(activeGenre!=='all')f=f.filter(r=>r.genres&&r.genres.includes(activeGenre));
-  f=getSorted(f);
-  const el=document.getElementById('results');
-  el.innerHTML=f.length===0
-    ?'<div class="empty">Ingen treff med valgte filtre</div>'
-    :f.map(r=>buildCard(r,allResults.indexOf(r))).join('')+'<p class="foot-note">Info basert på AI-kunnskap · Sjekk tjenesten for oppdatert tilgjengelighet</p>';
-}
-
-function buildCard(r,idx){
-  const isShow=r.type==='show', saved=wlHas(r.title);
-  const svcs=(r.services||[]).map(s=>{
-    const svc=SVCS[s.key];if(!svc)return'';
-    const fr=FREE.includes(s.type);
-    return `<a class="svc-row" href="${svc.url+encodeURIComponent(r.title)}" target="_blank" rel="noopener noreferrer">
-      <div class="svc-logo" style="background:${svc.color}">${ini(svc.name)}</div>
-      <div><div class="svc-name">${svc.name}</div><div class="svc-type ${fr?'free':'paid'}">${TLBL[s.type]||s.type}${s.price?' — '+s.price:''}</div></div>
-      <span class="svc-arr">→</span>
-    </a>`;
-  }).join('');
-  return `<div class="result-card">
-    <div class="card-top">
-      ${r.poster?`<div class="poster-wrap"><img src="${r.poster}" alt="" loading="lazy"/></div>`:''}
-      <div class="card-info">
-        <div class="card-title">${r.title}</div>
-        ${r.originalTitle&&r.originalTitle!==r.title?`<div class="card-orig">${r.originalTitle}</div>`:''}
-        <div class="card-meta">
-          <span class="badge ${isShow?'badge-show':'badge-film'}">${isShow?'Serie':'Film'}</span>
-          ${r.year?`<span class="meta">${r.year}</span>`:''}
-          ${r.imdb?`<span class="meta" style="color:#f5c518">★ ${r.imdb}</span>`:''}
-          ${r.runtime?`<span class="meta">${r.runtime}</span>`:''}
-        </div>
-        ${r.genres?`<div class="genres">${r.genres}</div>`:''}
-      </div>
-    </div>
-    <div class="card-actions">
-      <button class="wl-btn ${saved?'saved':''}" id="wlbtn-${idx}" onclick="clickSave(${idx})">${saved?'✓ Lagret':'+ Lagre'}</button>
-    </div>
-    <div class="card-svcs">${svcs||'<div class="no-svc">Ikke tilgjengelig på norske strømmetjenester for øyeblikket.</div>'}</div>
-  </div>`;
-}
-
-// Recommendations
-async function fetchRecs(results){
-  const rd=document.getElementById('recommendations');
-  if(!results.length){rd.classList.add('hidden');return;}
-  rd.classList.remove('hidden');
-  rd.innerHTML='<div class="rec-section"><div class="rec-title">✨ Du vil kanskje også like</div><div class="loading" style="padding:16px 0">Finner anbefalinger...</div></div>';
-  const titles=results.map(r=>`${r.title} (${r.type==='show'?'serie':'film'})`).join(', ');
-  try{
-    const res=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'__recommendations__'+titles})});
-    const data=await res.json();
-    if(!data.length){rd.classList.add('hidden');return;}
-    rd.innerHTML=`<div class="rec-section">
-      <div class="rec-title">✨ Du vil kanskje også like <span class="rec-sub">basert på søket ditt</span></div>
-      <div class="rec-grid">${data.map(r=>`
-        <div class="rec-card" onclick="searchFromRec('${r.title.replace(/'/g,"\\'")}')">
-          ${r.poster?`<img class="rec-poster" src="${r.poster}" alt="" loading="lazy"/>`:`<div class="rec-poster-ph">🎬</div>`}
-          <div class="rec-info">
-            <div class="rec-name">${r.title}</div>
-            <div class="rec-meta">${[r.year,r.imdb?'★'+r.imdb:''].filter(Boolean).join(' · ')}</div>
-            ${r.reason?`<div class="rec-reason">${r.reason}</div>`:''}
-          </div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }catch(e){rd.classList.add('hidden');}
-}
-
-function searchFromRec(title){
-  document.getElementById('searchInput').value=title;
-  doSearch();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// Search
-async function doSearch(){
-  const query=document.getElementById('searchInput').value.trim();
-  if(!query)return;
-  const btn=document.getElementById('searchBtn');
-  btn.disabled=true;btn.textContent='Søker...';
-  document.getElementById('results').innerHTML='<div class="loading">Henter strømmeinformasjon...</div>';
-  document.getElementById('filter-bar').classList.add('hidden');
-  document.getElementById('recommendations').classList.add('hidden');
-  try{
-    const res=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query})});
-    const data=await res.json();
-    allResults=data;activeType='all';activeGenre='all';activeSort='default';
-    renderFilterBar();showFiltered();
-    fetchRecs(data);
-  }catch(e){document.getElementById('results').innerHTML='<div class="error">Noe gikk galt. Prøv igjen.</div>';}
-  btn.disabled=false;btn.textContent='Søk';
-}
-
-// Topp 10
-const T10_SVCS=['netflix','viaplay','tv2','nrk'];
-
-async function renderTopp10(){
-  const el=document.getElementById('topp10-content');
-  // Render skeletons first
-  el.innerHTML=T10_SVCS.map(key=>{
-    const svc=SVCS[key];
-    return `<div class="t10-svc">
-      <div class="t10-header">
-        <div class="t10-logo" style="background:${svc.color}">${ini(svc.name)}</div>
-        <span class="t10-svc-name">${svc.name}</span>
-      </div>
-      <div id="t10-${key}">
-        ${[...Array(6)].map((_,i)=>`
-          <div class="t10-item t10-skeleton">
-            <span class="t10-rank">${i+1}</span>
-            <div class="t10-info">
-              <div class="t10-skel-bar" style="width:${110+Math.random()*80}px;margin-bottom:5px"></div>
-              <div class="t10-skel-bar" style="width:70px;height:10px"></div>
-            </div>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-
-  // Fetch all in parallel
-  T10_SVCS.forEach(async key=>{
-    if(!t10Cache[key]){
-      try{
-        const res=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'__topp10__'+SVCS[key].name})});
-        t10Cache[key]=await res.json();
-      }catch(e){t10Cache[key]=[];}
-    }
-    const listEl=document.getElementById('t10-'+key);
-    if(!listEl)return;
-    const data=t10Cache[key];
-    if(!data||!data.length){listEl.innerHTML='<div class="no-svc">Kunne ikke laste listen.</div>';return;}
-    listEl.innerHTML=data.slice(0,10).map((item,i)=>{
-      const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
-      return `<div class="t10-item" onclick="searchFromRec('${item.title.replace(/'/g,"\\'")}')">
-        <span class="t10-rank ${rc}">${i+1}</span>
-        <div class="t10-info">
-          <div class="t10-name">${item.title}</div>
-          <div class="t10-meta">${[item.year,item.imdb?'★'+item.imdb:'',item.genres].filter(Boolean).join(' · ')}</div>
-        </div>
-        <span class="badge ${item.type==='show'?'badge-show':'badge-film'}">${item.type==='show'?'Serie':'Film'}</span>
-      </div>`;
-    }).join('');
-  });
-}
-
-// Watchlist tab
-function renderWatchlist(){
-  const list=wlGet(),el=document.getElementById('wl-content');
-  if(!list.length){
-    el.innerHTML=`<div class="wl-empty"><div class="wl-empty-icon">🎬</div><div class="wl-empty-tx">Listen din er tom</div><div class="wl-empty-sub">Søk og trykk "+ Lagre"</div></div>`;
-    return;
+Svar KUN med et JSON-array. Format:
+[
+  {
+    "title": "Tittel",
+    "originalTitle": "Original hvis ulik",
+    "type": "film" eller "show",
+    "year": 2023,
+    "imdb": 8.1,
+    "genres": "Drama · Thriller",
+    "reason": "Kort begrunnelse på maks 5 ord",
+    "services": [{ "key": "netflix", "type": "flatrate" }]
   }
-  el.innerHTML=`<div class="wl-count">${list.length} tittel${list.length!==1?'er':''}</div>`+
-    list.map(item=>`<div class="wl-card">
-      ${item.poster?`<img class="wl-poster" src="${item.poster}" alt="" loading="lazy"/>`:`<div class="wl-ph">🎬</div>`}
-      <div class="wl-info">
-        <div class="wl-name">${item.title}</div>
-        <div class="wl-meta">${[item.type==='show'?'Serie':'Film',item.year,item.genres].filter(Boolean).join(' · ')}</div>
-      </div>
-      <button class="wl-rm" onclick="wlRemove(this.dataset.t);renderWatchlist();" data-t="${item.title.replace(/"/g,'&quot;')}">×</button>
-    </div>`).join('')+
-    `<button class="wl-clear" onclick="if(confirm('Tøm hele listen?')){wlSave([]);updateBadge();renderWatchlist();}">Tøm listen</button>`;
-}
+]
 
-// Tabs
-function showTab(tab){
-  ['search','topp10','watchlist','om'].forEach(t=>{
-    document.getElementById('tab-'+t).classList.toggle('hidden',t!==tab);
-    document.getElementById('btn-'+t).classList.toggle('active',t===tab);
-  });
-  if(tab==='watchlist')renderWatchlist();
-  if(tab==='topp10')renderTopp10();
-}
+Gyldige service-nøkler: netflix, hbo, disney, apple, viaplay, tv2, nrk, prime, paramount, skyshowtime
+Gyldige tilgangstyper: flatrate, free, ads, rent, buy
+Svar kun med JSON.`
+    : `Du er en ekspert på norske streamingtjenester. Brukeren søker etter: "${cleanQuery}"
 
-document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
-updateBadge();
-</script>
-</body>
-</html>
+Svar KUN med et JSON-array (ingen forklaring, ingen markdown). Finn de beste treffene (maks 4 resultater).
+
+Format:
+[
+  {
+    "title": "Tittel på norsk",
+    "originalTitle": "Originaltittel hvis annerledes",
+    "type": "film" eller "show",
+    "year": 2023,
+    "imdb": 8.2,
+    "runtime": "2t 15min",
+    "genres": "Drama · Thriller",
+    "services": [
+      { "key": "netflix", "type": "flatrate" },
+      { "key": "prime", "type": "rent", "price": "49 NOK" }
+    ]
+  }
+]
+
+Gyldige service-nøkler: netflix, hbo, disney, apple, viaplay, tv2, nrk, prime, paramount, skyshowtime
+Gyldige tilgangstyper: flatrate (inkludert i abo), free, ads, rent, buy
+
+Bruk din kunnskap om hvilke norske streamingtjenester som faktisk har innholdet. Svar kun med JSON.`;
+
+  try {
+    // 1. Hent resultater fra Claude
+    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": anthropicKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    const aiData = await aiRes.json();
+    if (!aiRes.ok) return res.status(500).json({ error: aiData?.error?.message || "AI-feil" });
+
+    const text = aiData.content?.map(c => c.text || "").join("").replace(/```json|```/g, "").trim();
+    const results = JSON.parse(text);
+
+    // 2. Hent plakater fra TMDB for hvert resultat
+    if (tmdbKey) {
+      await Promise.all(results.map(async (item) => {
+        try {
+          const searchTitle = item.originalTitle || item.title;
+          const mediaType = item.type === "show" ? "tv" : "movie";
+          const tmdbRes = await fetch(
+            `https://api.themoviedb.org/3/search/${mediaType}?query=${encodeURIComponent(searchTitle)}&language=no-NO&page=1`,
+            { headers: { Authorization: `Bearer ${tmdbKey}`, "Content-Type": "application/json" } }
+          );
+          const tmdbData = await tmdbRes.json();
+          const match = tmdbData.results?.[0];
+          if (match?.poster_path) {
+            item.poster = `https://image.tmdb.org/t/p/w300${match.poster_path}`;
+          }
+          // Hent også IMDB-score fra TMDB hvis vi ikke har den
+          if (!item.imdb && match?.vote_average && match.vote_average > 0) {
+            item.imdb = Math.round(match.vote_average * 10) / 10;
+          }
+        } catch (e) {
+          // Plakat-henting feilet – fortsett uten plakat
+        }
+      }));
+    }
+
+    res.status(200).json(results);
+  } catch (err) {
+    res.status(500).json({ error: `Serverfeil: ${err.message}` });
+  }
+}
