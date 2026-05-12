@@ -330,6 +330,7 @@ async function doSearch() {
     const data = await res.json();
     allResults=data; activeType='all'; activeGenre='all'; activeSort='default';
     renderFilterBar(); showFiltered();
+    fetchRecommendations(data);
   } catch(e) { document.getElementById('results').innerHTML='<div class="error">Noe gikk galt. Prøv igjen.</div>'; }
   btn.disabled=false; btn.textContent='Søk';
 }
