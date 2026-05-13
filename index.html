@@ -149,6 +149,17 @@
     .wl-clear { display:block; margin:14px auto 0; background:transparent; border:0.5px solid var(--sbb); color:var(--tx3); font-size:12px; padding:7px 18px; border-radius:8px; cursor:pointer; }
     .wl-clear:hover { border-color:rgba(248,113,113,0.4); color:#f87171; }
 
+    /* Notify */
+    .notify-box { background: linear-gradient(135deg,rgba(139,92,246,0.12),rgba(139,92,246,0.05)); border: 0.5px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 14px 16px; margin-top: 8px; }
+    .notify-title { font-size: 13px; font-weight: 500; color: #c4b5fd; margin-bottom: 8px; }
+    .notify-form { display: flex; gap: 8px; }
+    .notify-input { flex: 1; background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 13px; outline: none; min-width: 0; }
+    .notify-input::placeholder { color: rgba(255,255,255,0.3); }
+    .notify-btn { background: rgba(139,92,246,0.8); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+    .notify-btn:hover { background: rgba(139,92,246,1); }
+    .notify-btn:disabled { background: rgba(139,92,246,0.3); cursor: default; }
+    .notify-success { font-size: 13px; color: #4ade80; padding: 4px 0; }
+
     /* Om */
     .om-title { font-size:16px; font-weight:500; color:var(--tx); margin:20px 0 8px; }
     .om-title:first-child { margin-top:0; }
@@ -399,6 +410,28 @@ function searchFromRec(title){
   document.getElementById('searchInput').value=title;
   doSearch();
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Notify
+async function submitNotify(idx, btn) {
+  const input = document.getElementById('notify-input-' + idx);
+  const email = input.value.trim();
+  if (!email || !email.includes('@')) { input.style.borderColor = '#f87171'; return; }
+  input.style.borderColor = '';
+  btn.disabled = true; btn.textContent = 'Sender...';
+  const r = allResults[idx];
+  try {
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, title: r.title, type: r.type })
+    });
+    document.getElementById('notify-form-' + idx).innerHTML =
+      '<div class="notify-success">✓ Vi varsler deg når ' + r.title + ' kommer til norsk strømming!</div>';
+    gtag('event', 'notify_signup', { title: r.title });
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Varsle meg';
+  }
 }
 
 // Search
